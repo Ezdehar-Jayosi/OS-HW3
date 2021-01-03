@@ -129,7 +129,11 @@ inline void Game::print_board(const char *header) {
         for (uint i = 0; i < (unsigned) matrix_num_rows; ++i) {
             cout << u8"║";
             for (uint j = 0; j < (unsigned) matrix_num_cols; ++j) {
-                cout << (curr_matrix.at(i).at(j) ? u8"█" : u8"░");
+                if (curr_matrix.at(i).at(j) > 0)
+                    cout << colors[curr_matrix.at(i).at(j) % 7] << u8"█" << RESET;
+                else
+                    cout << u8"░";
+               
             }
             cout << u8"║" << endl;
         }

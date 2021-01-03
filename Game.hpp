@@ -5,7 +5,7 @@
 #include "PCQueue.hpp"
 #include "utils.hpp"
 #include "Thread.hpp"
-
+#include <cmath>
 /*--------------------------------------------------------------------------------
 								  Auxiliary Structures
 --------------------------------------------------------------------------------*/
@@ -163,6 +163,7 @@ private:
     // should we add static something cause update cells is a helper function
     void updateCells(int row, int col) {
         int live_cells = 0;
+        int c = 0;
         bool is_curr_live = gameOfLife.curr_matrix.at(row).at(col);
         for (int r = -1; r < 2; r++) {
             for (int c = -1; c < 2; c++) {
@@ -170,17 +171,22 @@ private:
                     col + c < gameOfLife.matrix_num_cols) {
                     if (gameOfLife.curr_matrix.at(row + r).at(col + c)) {
                         live_cells++;
+                        c+=gameOfLife.curr_matrix.at(row + r).at(col + c);
                     }
                 }
             }
         }
         live_cells -= is_curr_live;
-        if (!is_curr_live && live_cells == 3) {
+        if (!is_curr_live && live_cells == 3) {  //NEW :/ TODO: ADD THE DOMINANT SPECIE THING
             gameOfLife.step_matrix.at(row).at(col) = 1;
         } else if (is_curr_live && (live_cells == 2 || live_cells == 3)) {
             gameOfLife.step_matrix.at(row).at(col) = 1;
         } else {
             gameOfLife.step_matrix.at(row).at(col) = 0;
+        }
+        if(gameOfLife.step_matrix.at(row).at(col)>0){  //NEW: This checks if the cell is alive, if so the cell changes its specie.
+             gameOfLife.step_matrix.at(row).at(col) = round(c/live_cells);
+        
         }
     }
 
