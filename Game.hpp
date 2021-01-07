@@ -6,6 +6,21 @@
 #include "utils.hpp"
 #include "Thread.hpp"
 #include <cmath>
+
+int phase = 1;
+/*--------------------------------------------------------------------------------
+								  Species colors                                     ///NEW
+--------------------------------------------------------------------------------*/
+#define RESET   "\033[0m"
+#define BLACK   "\033[30m"      /* Black - 7 */
+#define RED     "\033[31m"      /* Red - 1*/
+#define GREEN   "\033[32m"      /* Green - 2*/
+#define YELLOW  "\033[33m"      /* Yellow - 3*/
+#define BLUE    "\033[34m"      /* Blue - 4*/
+#define MAGENTA "\033[35m"      /* Magenta - 5*/
+#define CYAN    "\033[36m"      /* Cyan - 6*/
+
+
 /*--------------------------------------------------------------------------------
 								  Auxiliary Structures
 --------------------------------------------------------------------------------*/
@@ -159,11 +174,17 @@ class PoolThread : public Thread {
 private:
     Game &gameOfLife;
     unsigned int thread_id;
-
+    int find_dominant_specie(int row, int col){
+        int arr[8] = {0};
+        
+    
+    
+    }
     // should we add static something cause update cells is a helper function
     void updateCells(int row, int col) {
         int live_cells = 0;
         int c = 0;
+        int arr[8] = {0};  //for getting the dominant specie
         bool is_curr_live = gameOfLife.curr_matrix.at(row).at(col);
         for (int r = -1; r < 2; r++) {
             for (int c = -1; c < 2; c++) {
@@ -172,22 +193,38 @@ private:
                     if (gameOfLife.curr_matrix.at(row + r).at(col + c)) {
                         live_cells++;
                         c+=gameOfLife.curr_matrix.at(row + r).at(col + c);
+                        arr[(gameOfLife.curr_matrix.at(row + r).at(col + c)) % 7]+=1;
                     }
                 }
             }
         }
         live_cells -= is_curr_live;
-        if (!is_curr_live && live_cells == 3) {  //NEW :/ TODO: ADD THE DOMINANT SPECIE THING
-            gameOfLife.step_matrix.at(row).at(col) = 1;
+        int dominant_specie=-1, sum_species=0;
+        for(int i=0;i<=7;i++){
+            if(arr[i]*i>sum_species){
+                dominant_specie=i;
+                sum_species=arr[i];
+            }
+        
+        }
+        //PHASE 2 HERE.
+        if(phase > 1 ){  //NEW: Doing Phase 2 of the current generation
+           if(gameOfLife.step_matrix.at(row).at(col)>0){  //NEW: This checks if the cell is alive, if so the cell changes its specie.
+             gameOfLife.step_matrix.at(row).at(col) = round(c/live_cells);
+        
+            }
+            return;
+        
+        }
+        //PHASE 1 HERE ONLY
+        if (!is_curr_live && live_cells == 3) { 
+            gameOfLife.step_matrix.at(row).at(col) = dominant_specie; //NEW: becomes the dominant specie.
         } else if (is_curr_live && (live_cells == 2 || live_cells == 3)) {
             gameOfLife.step_matrix.at(row).at(col) = 1;
         } else {
             gameOfLife.step_matrix.at(row).at(col) = 0;
         }
-        if(gameOfLife.step_matrix.at(row).at(col)>0){  //NEW: This checks if the cell is alive, if so the cell changes its specie.
-             gameOfLife.step_matrix.at(row).at(col) = round(c/live_cells);
-        
-        }
+       
     }
 
 public:
@@ -217,10 +254,6 @@ public:
 
             pthread_mutex_lock(&(gameOfLife.global_lock));
             auto gen_start = std::chrono::system_clock::now();
-      //     auto duration_in_seconds = std::chrono::duration_cast<std::chrono::microseconds>(
-       //             std::chrono::system_clock::now().time_since_epoch()).count();
-          //  double tile_start_time = (double) std::chrono::duration_cast<std::chrono::microseconds>(
-          //           gen_start - gameOfLife.tp).count();
             pthread_mutex_unlock(&(gameOfLife.global_lock));
 
             int first = t.getRow1(), last = t.getRow2();
@@ -233,10 +266,6 @@ public:
 
             pthread_mutex_lock(&(gameOfLife.global_lock));
             auto gen_end = std::chrono::system_clock::now();
-//            duration_in_seconds = std::chrono::duration_cast<std::chrono::microseconds>(
-//                    std::chrono::system_clock::now().time_since_epoch()).count();
-           // double tile_end_time = (double) std::chrono::duration_cast<std::chrono::microseconds>(
-           //         gen_end - gameOfLife.tp).count();
             pthread_mutex_unlock(&(gameOfLife.global_lock));
 
 
@@ -253,11 +282,7 @@ public:
             if ((unsigned) gameOfLife.num_of_finished_threads == gameOfLife.m_thread_num) {
                 pthread_cond_signal(&(gameOfLife.threadsFinished));
             }
-           // int indx =  gameOfLife.m_tile_hist.size();
             pthread_mutex_unlock(&(gameOfLife.global_lock));
-            /*gameOfLife.tile_finish_time_hist.at(indx-1).thread_id = this->thread_id;
-            gameOfLife.tile_finish_time_hist.at(indx-1).tile_end_time = tile_end_time;
-            gameOfLife.tile_finish_time_hist.at(indx-1).tile_start_time = tile_start_time;*/
 
         }
     }

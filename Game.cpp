@@ -1,5 +1,7 @@
 #include "Game.hpp"
 
+static const char *colors[7] = {BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN};
+
 /*--------------------------------------------------------------------------------
 								
 --------------------------------------------------------------------------------*/
@@ -28,7 +30,11 @@ void Game::run() {
     for (uint i = 0; i < m_gen_num; ++i) {
         //num_of_generations++;
         auto gen_start = std::chrono::system_clock::now();
-        _step(i); // Iterates a single generation
+        _step(i); // Iterates a single generation for phase 1
+        ///NEW: DO THE SPECIES THING HERE AND THE COLORS:
+        phase=2;
+        _step(i); // Iterates a single generation for phase 2
+        ///DONE
         auto gen_end = std::chrono::system_clock::now();
         m_gen_hist.push_back(
                 (double) std::chrono::duration_cast<std::chrono::microseconds>(gen_end - gen_start).count());
@@ -89,6 +95,7 @@ void Game::_step(uint curr_gen) {
     pthread_mutex_unlock(&global_lock);
 
 }
+
 
 // Destroys board and frees all threads and resources
 // Not implemented in the Game's destructor for testing purposes.
