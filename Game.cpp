@@ -6,7 +6,7 @@ static const char *colors[7] = {BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN};
 								
 --------------------------------------------------------------------------------*/
 
-const vector<tile_record> Game::tile_hist() const { // Returns the tile timing histogram
+const vector<double> Game::tile_hist() const { // Returns the tile timing histogram
     return m_tile_hist;
 }
 
@@ -30,11 +30,18 @@ void Game::run() {
     for (uint i = 0; i < m_gen_num; ++i) {
         //num_of_generations++;
         auto gen_start = std::chrono::system_clock::now();
+        //print1f("new gen\n");
+         phase=1;
         _step(i); // Iterates a single generation for phase 1
         ///NEW: DO THE SPECIES THING HERE AND THE COLORS:
+      //  printf("hello we are in phase 1 going to phase 2\n");
+      //print_board("after phase 1 ");
         phase=2;
+        //printf("(4)num_of_finished_threads is %d\n",num_of_finished_threads);
+        //printf("finished phase 1 going to phase 2\n");
         _step(i); // Iterates a single generation for phase 2
         ///DONE
+        // printf("hello we are in phase2 finishing\n");
         auto gen_end = std::chrono::system_clock::now();
         m_gen_hist.push_back(
                 (double) std::chrono::duration_cast<std::chrono::microseconds>(gen_end - gen_start).count());
@@ -56,8 +63,8 @@ void Game::_init_game() {
     vector<string> lines = utils::read_lines(filename);
     matrix_num_rows = lines.size();
     matrix_num_cols = (utils::split(lines.at(0), ' ')).size();
-    curr_matrix = bool_mat(matrix_num_rows, vector<bool>(matrix_num_cols));
-    step_matrix = bool_mat(matrix_num_rows, vector<bool>(matrix_num_cols));
+    curr_matrix = bool_mat(matrix_num_rows, vector<uint>(matrix_num_cols));
+    step_matrix = bool_mat(matrix_num_rows, vector<uint>(matrix_num_cols));
     m_thread_num = (num_of_threads < matrix_num_rows) ? num_of_threads : matrix_num_rows;
     tile_finish_time_hist = vector<tile_record>(m_gen_num * m_thread_num);
     for (int i = 0; i < matrix_num_rows; i++) {
@@ -84,13 +91,17 @@ void Game::_step(uint curr_gen) {
     int row_per_thread = (int) (matrix_num_rows / m_thread_num);
     int i;
     for (i = 0; (unsigned) i < (m_thread_num - 1); i++) {
+       // printf("(1)num_of_finished_threads is %d\n",num_of_finished_threads);
         task tk = task(row_per_thread * i, (row_per_thread * (i + 1)) - 1);
         TasksQueue->push(tk);
     }
     task tk = task(row_per_thread * i, matrix_num_rows - 1);
     TasksQueue->push(tk);
+    //printf("(2)num_of_finished_threads is %d\n",num_of_finished_threads);
     pthread_cond_wait(&(threadsFinished), &global_lock);
+    //printf("here\n");
     num_of_finished_threads = 0;
+    //printf("(3)num_of_finished_threads is %d\n",num_of_finished_threads);
     swap(curr_matrix, step_matrix);
     pthread_mutex_unlock(&global_lock);
 
@@ -137,7 +148,7 @@ inline void Game::print_board(const char *header) {
             cout << u8"║";
             for (uint j = 0; j < (unsigned) matrix_num_cols; ++j) {
                 if (curr_matrix.at(i).at(j) > 0)
-                    cout << colors[curr_matrix.at(i).at(j) % 7] << u8"█" << RESET;
+                    cout << colors[curr_matrix.at(i).at(j)%7 ] << u8"█" << RESET; //maybe I should return %7 or maybe not
                 else
                     cout << u8"░";
                

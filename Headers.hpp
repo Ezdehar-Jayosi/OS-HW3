@@ -45,7 +45,7 @@ using std::cerr;
 using std::endl;
 
 typedef unsigned int uint;
-typedef vector<vector<bool>> bool_mat; // Use this as your Game Field 
+typedef vector<vector<uint>> bool_mat; // Use this as your Game Field 
 
 /*--------------------------------------------------------------------------------
 								  Defines & Macros
